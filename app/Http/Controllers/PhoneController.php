@@ -6,13 +6,40 @@ namespace App\Http\Controllers;
 use Request;
 use App\Http\Requests;
 use App\Phone;
+use Session;
+use Excel;
 
 class PhoneController extends Controller
 {
 
+
     public function __construct()
     {
         $this->middleware('auth');
+    }
+
+    /**
+     *
+     */
+    public function export()
+    {
+        $rqst = Session::get('filters');
+        if(!empty($rqst)){
+            $state=$rqst['st'];
+            $city=$rqst['ct'];
+            $gender=$rqst['gender'];
+            $phones = Phone::searchState($state)->searchCity($city)->searchGender($gender)
+                ->get();
+        }
+        else {
+            $phones = Phone::all();
+        }
+        Excel::create('export', function($excel)use($phones){
+            $excel->sheet('Phone List', function($sheet) use($phones) {
+                $sheet->fromModel($phones);
+            });
+        })->download('xlsx');
+
     }
     /**
      * Display a listing of the resource.
@@ -21,11 +48,11 @@ class PhoneController extends Controller
      */
     public function index()
     {
-        $request = Request::all();
-        if(!empty($request)){
-            $state=$request['st'];
-            $city=$request['ct'];
-            $gender=$request['gender'];
+        $rqst = Request::all();
+        if(!empty($rqst)){
+            $state=$rqst['st'];
+            $city=$rqst['ct'];
+            $gender=$rqst['gender'];
             $phones = Phone::searchState($state)->searchCity($city)->searchGender($gender)
             ->get();
         }
@@ -40,9 +67,8 @@ class PhoneController extends Controller
         }
         $json = json_encode($forjson); 
         Request::flash();
+        Session::put('filters', $rqst);
         return view('phones.index', compact('phones','count','json'));
-
-
 
     }
 
@@ -111,4 +137,6 @@ class PhoneController extends Controller
     {
         //
     }
+
+    
 }

@@ -16,13 +16,20 @@ Route::get('/', function () {
 });
 
 Route::group(['middleware' => 'web'], function(){
+		#AUTH
+		Route::auth();
 
-Route::auth();
-
-Route::get('/home', 'HomeController@index');
-
-Route::resource('phones', 'PhoneController');
-
+		Route::get('/home', 'HomeController@index');
+		
+		#API phones
+		
+		Route::resource('phones', 'PhoneController');
+		Route::post('phones/export',['as'=>'phones.export','uses'=>'PhoneController@export']);
+		
+		#Profile
+		Route::get('/{profile}', 'ProfilesController@show');
+		Route::get('/{profile}/edit', ['as'=>'profile.edit', 'uses'=>'ProfilesController@edit']);
+		Route::post('/{profile}/update', ['as'=>'profile.update', 'uses'=>'ProfilesController@update']);
 });
 
 
